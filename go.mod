@@ -1,14 +1,13 @@
 module github.com/kedacore/keda/v2
 
-go 1.17
+go 1.18
 
 require (
 	cloud.google.com/go/compute v1.1.0
 	cloud.google.com/go/monitoring v1.2.0
-	github.com/Azure/azure-amqp-common-go/v3 v3.2.2
-	github.com/Azure/azure-event-hubs-go/v3 v3.3.16
-	github.com/Azure/azure-sdk-for-go v61.4.0+incompatible
-	github.com/Azure/azure-service-bus-go v0.11.5
+	github.com/Azure/azure-amqp-common-go/v3 v3.2.3
+	github.com/Azure/azure-event-hubs-go/v3 v3.3.17
+	github.com/Azure/azure-sdk-for-go v63.4.0+incompatible
 	github.com/Azure/azure-storage-blob-go v0.14.0
 	github.com/Azure/azure-storage-queue-go v0.0.0-20191125232315-636801874cdd
 	github.com/Azure/go-autorest/autorest v0.11.24
@@ -67,6 +66,13 @@ require (
 	sigs.k8s.io/custom-metrics-apiserver v1.23.0
 )
 
+// require (
+// 	github.com/Azure/azure-sdk-for-go/sdk/azcore v0.23.1 // indirect
+// 	github.com/Azure/azure-sdk-for-go/sdk/internal v0.10.0 // indirect
+// 	github.com/Azure/azure-sdk-for-go/sdk/messaging/internal v0.1.1 // indirect
+// 	github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus/internal v0.4.0
+// )
+
 replace (
 	// https://www.whitesourcesoftware.com/vulnerability-database/CVE-2020-26160
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.1.0
@@ -84,7 +90,7 @@ replace (
 
 require (
 	github.com/Azure/azure-pipeline-go v0.2.3 // indirect
-	github.com/Azure/go-amqp v0.16.4 // indirect
+	github.com/Azure/go-amqp v0.17.4 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.18 // indirect
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.5 // indirect
@@ -252,9 +258,19 @@ require (
 	k8s.io/component-base v0.23.3 // indirect
 	k8s.io/gengo v0.0.0-20211129171323-c02415ce4185 // indirect
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 // indirect
-	nhooyr.io/websocket v1.8.7 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.27 // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+)
+
+require github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus v0.4.0
+
+require (
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v0.23.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v0.14.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v0.9.1 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/messaging/internal v0.1.0 // indirect
+	github.com/gobuffalo/flect v0.2.4 // indirect
+	sigs.k8s.io/controller-tools v0.4.1 // indirect
 )

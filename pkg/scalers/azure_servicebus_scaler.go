@@ -23,7 +23,6 @@ import (
 	"strconv"
 
 	"github.com/Azure/azure-amqp-common-go/v3/auth"
-	servicebus "github.com/Azure/azure-service-bus-go"
 	az "github.com/Azure/go-autorest/autorest/azure"
 	"github.com/kedacore/keda/v2/pkg/scalers/azure"
 	v2beta2 "k8s.io/api/autoscaling/v2beta2"
@@ -33,6 +32,8 @@ import (
 	"k8s.io/metrics/pkg/apis/external_metrics"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus/admin"
+	servicebus "github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus/internal"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	kedautil "github.com/kedacore/keda/v2/pkg/util"
 )
@@ -244,17 +245,16 @@ func (a azureTokenProvider) GetToken(uri string) (*auth.Token, error) {
 
 // Returns the length of the queue or subscription
 func (s *azureServiceBusScaler) GetAzureServiceBusLength(ctx context.Context) (int32, error) {
-	// get namespace
-	namespace, err := s.getServiceBusNamespace(ctx)
+	servicebusClient, err := admin.NewClientFromConnectionString(s.metadata.connection, &admin.ClientOptions{})
 	if err != nil {
 		return -1, err
 	}
 	// switch case for queue vs topic here
 	switch s.metadata.entityType {
 	case queue:
-		return getQueueEntityFromNamespace(ctx, namespace, s.metadata.queueName)
+		return getMessageCountFromQueue(ctx, servicebusClient, s.metadata.queueName)
 	case subscription:
-		return getSubscriptionEntityFromNamespace(ctx, namespace, s.metadata.topicName, s.metadata.subscriptionName)
+		return getMessageCountFromSubscription(ctx, servicebusClient, s.metadata.topicName, s.metadata.subscriptionName)
 	default:
 		return -1, fmt.Errorf("no entity type")
 	}
@@ -275,42 +275,54 @@ func (s *azureServiceBusScaler) getServiceBusNamespace(ctx context.Context) (*se
 		if err != nil {
 			return namespace, err
 		}
-		namespace.TokenProvider = azureTokenProvider{
-			ctx:        ctx,
-			httpClient: s.httpClient,
-		}
-		namespace.Name = s.metadata.namespace
+		//:TODO fix below commented errors
+		// namespace.TokenProvider = azureTokenProvider{
+		// 	ctx:        ctx,
+		// 	httpClient: s.httpClient,
+		// }
+		//namespace.Name = s.metadata.namespace
 	}
 
-	namespace.Suffix = s.metadata.endpointSuffix
+	//namespace.Suffix = s.metadata.endpointSuffix
 	return namespace, nil
 }
 
-func getQueueEntityFromNamespace(ctx context.Context, ns *servicebus.Namespace, queueName string) (int32, error) {
-	// get queue manager from namespace
-	queueManager := ns.NewQueueManager()
+func (s *azureServiceBusScaler) getServiceBusClient(ctx context.Context) (*admin.Client, error) {
+	var servicebusClient *admin.Client
+	var err error
 
-	// queue manager.get(ctx, queueName) -> QueueEntitity
-	queueEntity, err := queueManager.Get(ctx, queueName)
-	if err != nil {
-		return -1, err
+	if s.podIdentity == "" || s.podIdentity == kedav1alpha1.PodIdentityProviderNone {
+		servicebusClient, err = admin.NewClientFromConnectionString(s.metadata.connection, &admin.ClientOptions{})
+		if err != nil {
+			return servicebusClient, err
+		}
+	} else if s.podIdentity == kedav1alpha1.PodIdentityProviderAzure {
+		//var azTokenCredential azcore.TokenCredential
+		//azTokenCredential = azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{})
+		servicebusClient, err = admin.NewClient(s.metadata.namespace, nil, &admin.ClientOptions{})
+		if err != nil {
+			return servicebusClient, err
+		}
 	}
 
-	return *queueEntity.CountDetails.ActiveMessageCount, nil
+	//namespace.Suffix = s.metadata.endpointSuffix
+	return servicebusClient, nil
 }
 
-func getSubscriptionEntityFromNamespace(ctx context.Context, ns *servicebus.Namespace, topicName, subscriptionName string) (int32, error) {
-	// get subscription manager from namespace
-	subscriptionManager, err := ns.NewSubscriptionManager(topicName)
+func getMessageCountFromQueue(ctx context.Context, client *admin.Client, queueName string) (int32, error) {
+	GetQueueRuntimePropertiesResponse, err := client.GetQueueRuntimeProperties(ctx, queueName, nil)
 	if err != nil {
 		return -1, err
 	}
 
-	// subscription manager.get(ctx, subName) -> SubscriptionEntity
-	subscriptionEntity, err := subscriptionManager.Get(ctx, subscriptionName)
+	return GetQueueRuntimePropertiesResponse.QueueRuntimeProperties.ActiveMessageCount, nil
+}
+
+func getMessageCountFromSubscription(ctx context.Context, client *admin.Client, topicName, subscriptionName string) (int32, error) {
+	GetSubscriptionRuntimePropertiesResponse, err := client.GetSubscriptionRuntimeProperties(ctx, topicName, subscriptionName, nil)
 	if err != nil {
 		return -1, err
 	}
 
-	return *subscriptionEntity.CountDetails.ActiveMessageCount, nil
+	return GetSubscriptionRuntimePropertiesResponse.SubscriptionRuntimeProperties.ActiveMessageCount, nil
 }
