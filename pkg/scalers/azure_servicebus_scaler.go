@@ -23,6 +23,7 @@ import (
 	"strconv"
 
 	"github.com/Azure/azure-amqp-common-go/v3/auth"
+	// servicebus "github.com/Azure/azure-service-bus-go"
 	az "github.com/Azure/go-autorest/autorest/azure"
 	"github.com/kedacore/keda/v2/pkg/scalers/azure"
 	v2beta2 "k8s.io/api/autoscaling/v2beta2"
@@ -33,7 +34,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus/admin"
-	servicebus "github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus/internal"
+	// servicebus "github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus/internal"
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	kedautil "github.com/kedacore/keda/v2/pkg/util"
 )
@@ -261,31 +262,31 @@ func (s *azureServiceBusScaler) GetAzureServiceBusLength(ctx context.Context) (i
 }
 
 // Returns service bus namespace object
-func (s *azureServiceBusScaler) getServiceBusNamespace(ctx context.Context) (*servicebus.Namespace, error) {
-	var namespace *servicebus.Namespace
-	var err error
+// func (s *azureServiceBusScaler) getServiceBusNamespace(ctx context.Context) (*servicebus.Namespace, error) {
+// 	var namespace *servicebus.Namespace
+// 	var err error
 
-	if s.podIdentity == "" || s.podIdentity == kedav1alpha1.PodIdentityProviderNone {
-		namespace, err = servicebus.NewNamespace(servicebus.NamespaceWithConnectionString(s.metadata.connection))
-		if err != nil {
-			return namespace, err
-		}
-	} else if s.podIdentity == kedav1alpha1.PodIdentityProviderAzure {
-		namespace, err = servicebus.NewNamespace()
-		if err != nil {
-			return namespace, err
-		}
-		//:TODO fix below commented errors
-		// namespace.TokenProvider = azureTokenProvider{
-		// 	ctx:        ctx,
-		// 	httpClient: s.httpClient,
-		// }
-		//namespace.Name = s.metadata.namespace
-	}
+// 	if s.podIdentity == "" || s.podIdentity == kedav1alpha1.PodIdentityProviderNone {
+// 		namespace, err = servicebus.NewNamespace(servicebus.NamespaceWithConnectionString(s.metadata.connection))
+// 		if err != nil {
+// 			return namespace, err
+// 		}
+// 	} else if s.podIdentity == kedav1alpha1.PodIdentityProviderAzure {
+// 		namespace, err = servicebus.NewNamespace()
+// 		if err != nil {
+// 			return namespace, err
+// 		}
+// 		//:TODO fix below commented errors
+// 		// namespace.TokenProvider = azureTokenProvider{
+// 		// 	ctx:        ctx,
+// 		// 	httpClient: s.httpClient,
+// 		// }
+// 		//namespace.Name = s.metadata.namespace
+// 	}
 
-	//namespace.Suffix = s.metadata.endpointSuffix
-	return namespace, nil
-}
+// 	//namespace.Suffix = s.metadata.endpointSuffix
+// 	return namespace, nil
+// }
 
 func (s *azureServiceBusScaler) getServiceBusClient(ctx context.Context) (*admin.Client, error) {
 	var servicebusClient *admin.Client
